@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <!-- Intencionalmente mínimo: la app usa JPA + persistence.xml.
+         Se incluye para satisfacer hibernate.ejb.cfgfile=hibernate.cfg.xml en EAP7. -->
+    <property name="hibernate.show_sql">false</property>
+  </session-factory>
+</hibernate-configuration>
+

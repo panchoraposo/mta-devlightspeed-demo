@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5">
+
+  <display-name>fsi-risk-eap5-legacy</display-name>
+
+  <filter>
+    <filter-name>LegacyAuthFilter</filter-name>
+    <filter-class>com.acme.fsi.risk.LegacyAuthFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>LegacyAuthFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <servlet>
+    <servlet-name>LegacyRiskServlet</servlet-name>
+    <servlet-class>com.acme.fsi.risk.LegacyRiskServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>LegacyRiskServlet</servlet-name>
+    <url-pattern>/risk</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>LegacyRiskPostServlet</servlet-name>
+    <servlet-class>com.acme.fsi.risk.LegacyRiskPostServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>LegacyRiskPostServlet</servlet-name>
+    <url-pattern>/risk/submit</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>LegacyAdminServlet</servlet-name>
+    <servlet-class>com.acme.fsi.risk.LegacyAdminServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>LegacyAdminServlet</servlet-name>
+    <url-pattern>/admin</url-pattern>
+  </servlet-mapping>
+</web-app>
+

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FSI Payments (Legacy)</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; background: #fafafa; overflow-x: hidden; }
+      .container { max-width: 1100px; margin: 0 auto; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+      .card { border: 1px solid #e6e6e6; border-radius: 12px; padding: 16px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0; }
+      label { display: block; font-size: 12px; color: #444; margin-top: 10px; }
+      input, select { width: 100%; max-width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
+      button { margin-top: 12px; padding: 10px 12px; border: 1px solid #222; background: #111; color: #fff; border-radius: 10px; cursor: pointer; }
+      button.secondary { background: #fff; color: #111; }
+      pre { background: #f6f6f6; padding: 10px; border-radius: 8px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 13px; }
+      th { font-size: 12px; color: #444; }
+      td, th { overflow-wrap: anywhere; word-break: break-word; }
+      .muted { color: #666; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>FSI Payments (Legacy)</h2>
+      <p class="muted">UI simple para demo: EAP 7 + JAX-RS + JMS/MDB + JPA.</p>
+
+      <div class="grid">
+      <div class="card">
+        <h3>Enviar pago</h3>
+        <label>Debtor IBAN</label>
+        <input id="debtorIban" value="DE123" />
+        <label>Creditor IBAN</label>
+        <input id="creditorIban" value="DE999" />
+        <label>Amount</label>
+        <input id="amount" value="10.00" />
+        <label>Currency</label>
+        <select id="currency">
+          <option>USD</option>
+          <option>EUR</option>
+          <option>GBP</option>
+        </select>
+        <button id="btnSubmit">Submit</button>
+        <div id="submitOut"></div>
+      </div>
+
+      <div class="card">
+        <h3>Consultar estado</h3>
+        <label>paymentId</label>
+        <input id="paymentId" placeholder="pega el paymentId aquí" />
+        <button class="secondary" id="btnStatus">Consultar</button>
+        <div id="statusOut"></div>
+      </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+      <h3>Últimos pagos</h3>
+      <button class="secondary" id="btnRefresh">Actualizar</button>
+      <div id="listOut" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <script>
+      function apiBasePath() {
+        let p = window.location.pathname || '/';
+        p = p.replace(/\/index\.html$/, '');
+        if (p.endsWith('/')) p = p.slice(0, -1);
+        return p + '/api';
+      }
+      const apiBase = apiBasePath();
+
+      function esc(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      async function postJson(url, body) {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const txt = await res.text();
+        return { ok: res.ok, status: res.status, text: txt };
+      }
+
+      async function getText(url) {
+        const res = await fetch(url);
+        const txt = await res.text();
+        return { ok: res.ok, status: res.status, text: txt };
+      }
+
+      document.getElementById('btnSubmit').addEventListener('click', async () => {
+        const payload = {
+          debtorIban: document.getElementById('debtorIban').value,
+          creditorIban: document.getElementById('creditorIban').value,
+          amount: Number(document.getElementById('amount').value),
+          currency: document.getElementById('currency').value
+        };
+        const out = document.getElementById('submitOut');
+        out.innerHTML = '<div class="muted">Enviando...</div>';
+        const r = await postJson(apiBase + '/payments', payload);
+        out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+        try {
+          const obj = JSON.parse(r.text);
+          if (obj && obj.paymentId) {
+            document.getElementById('paymentId').value = obj.paymentId;
+          }
+        } catch (_) {}
+      });
+
+      document.getElementById('btnStatus').addEventListener('click', async () => {
+        const pid = document.getElementById('paymentId').value;
+        const out = document.getElementById('statusOut');
+        out.innerHTML = '<div class="muted">Cargando...</div>';
+        const r = await getText(apiBase + '/payments/' + encodeURIComponent(pid));
+        out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+      });
+
+      function renderList(rows) {
+        if (!Array.isArray(rows) || rows.length === 0) {
+          return '<div class="muted">No data</div>';
+        }
+        let html = '<table><thead><tr><th>paymentId</th><th>amount</th><th>currency</th><th>createdAt</th><th>cleared</th></tr></thead><tbody>';
+        for (const r of rows) {
+          html += '<tr>' +
+            '<td><a href="#" data-pid="' + esc(r.paymentId) + '">' + esc(r.paymentId) + '</a></td>' +
+            '<td>' + esc(r.amount) + '</td>' +
+            '<td>' + esc(r.currency) + '</td>' +
+            '<td>' + esc(r.createdAt) + '</td>' +
+            '<td>' + esc(r.clearedFlag) + '</td>' +
+            '</tr>';
+        }
+        html += '</tbody></table>';
+        return html;
+      }
+
+      async function refreshList() {
+        const out = document.getElementById('listOut');
+        out.innerHTML = '<div class="muted">Cargando...</div>';
+        const r = await getText(apiBase + '/payments?limit=10');
+        if (!r.ok) {
+          out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+          return;
+        }
+        try {
+          const rows = JSON.parse(r.text);
+          out.innerHTML = renderList(rows);
+          out.querySelectorAll('a[data-pid]').forEach(a => {
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              document.getElementById('paymentId').value = a.getAttribute('data-pid');
+              document.getElementById('btnStatus').click();
+            });
+          });
+        } catch (e) {
+          out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+        }
+      }
+
+      document.getElementById('btnRefresh').addEventListener('click', refreshList);
+      refreshList();
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,25 @@
+**/target/
+**/.classpath
+**/.project
+**/.settings/
+**/.idea/
+**/*.iml
+**/.vscode/
+.DS_Store
+
+# Editor metadata (generated)
+.metadata/
+
+# Private keys / credentials (never commit)
+*.pem
+
+# Local MTA CLI bundle (too large for git)
+mta-*-cli-*.zip
+mta-*-cli-*/
+
+# Demo run workdirs (avoid accidental overwrites)
+demo/runs/
+
+# VM demo env/config
+demo/vm/.env
+

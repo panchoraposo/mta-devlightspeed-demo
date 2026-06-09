@@ -1,0 +1,16 @@
+{
+  "folders": [
+    { "path": "apps/inventory-springboot2-legacy" },
+    { "path": "apps/inventory-springboot3-target" },
+    { "path": "apps/orders-jee8-legacy" },
+    { "path": "apps/orders-jakarta-target" },
+    { "path": "apps/billing-servlet25-java6-legacy" },
+    { "path": "apps/shipping-soap-java7-legacy" }
+  ],
+  "settings": {
+    "mta-core.analyzerPath": "/Users/pancho/Documents/codes/mta-devlightspeed-demo/mta-8.1.0-cli-darwin-arm64/darwin-mta-cli",
+    "mta-core.genai.enabled": true,
+    "mta-core.genai.agentMode": true
+  }
+}
+
