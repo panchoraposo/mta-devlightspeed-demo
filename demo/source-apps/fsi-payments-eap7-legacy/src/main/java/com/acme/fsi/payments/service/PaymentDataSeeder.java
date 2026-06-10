@@ -2,10 +2,10 @@ package com.acme.fsi.payments.service;
 
 import com.acme.fsi.payments.model.PaymentEntity;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.ejb.EJB;
-import jakarta.ejb.Singleton;
-import jakarta.ejb.Startup;
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;

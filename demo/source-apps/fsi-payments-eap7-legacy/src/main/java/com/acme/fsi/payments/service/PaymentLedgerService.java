@@ -1,22 +1,27 @@
 package com.acme.fsi.payments.service;
 
 import com.acme.fsi.payments.model.PaymentEntity;
-import jakarta.transaction.Transactional;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
+
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
+
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import java.util.Date;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
+@Stateless
+@SuppressWarnings({"deprecation", "unchecked"})
 public class PaymentLedgerService {
   @PersistenceContext(unitName = "fsiPaymentsPU")
   EntityManager em;
 
-  @Transactional
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void record(String paymentId, PaymentEntity e) {
     if (e == null) {
       return;
@@ -30,11 +35,10 @@ public class PaymentLedgerService {
   }
 
   public List<PaymentEntity> findByPaymentIdLegacyCriteria(String paymentId) {
-    CriteriaBuilder cb = em.getCriteriaBuilder();
-    CriteriaQuery<PaymentEntity> cq = cb.createQuery(PaymentEntity.class);
-    Root<PaymentEntity> root = cq.from(PaymentEntity.class);
-    cq.select(root).where(cb.equal(root.get("paymentId"), paymentId));
-    return em.createQuery(cq).getResultList();
+    Session session = (Session) em.getDelegate();
+    Criteria c = session.createCriteria(PaymentEntity.class);
+    c.add(Restrictions.eq("paymentId", paymentId));
+    return c.list();
   }
 
   public List<PaymentEntity> listLatest(int limit) {

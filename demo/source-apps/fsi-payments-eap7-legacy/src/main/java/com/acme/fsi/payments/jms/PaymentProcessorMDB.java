@@ -1,26 +1,27 @@
 package com.acme.fsi.payments.jms;
 
-import jakarta.ejb.ActivationConfigProperty;
-import jakarta.ejb.MessageDriven;
-import jakarta.jms.Message;
-import jakarta.jms.MessageListener;
-import jakarta.jms.TextMessage;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
-import jakarta.xml.bind.DatatypeConverter;
+import com.acme.fsi.payments.service.PaymentStatusStore;
+
+import javax.ejb.ActivationConfigProperty;
+import javax.ejb.EJB;
+import javax.ejb.MessageDriven;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.xml.bind.DatatypeConverter;
 import java.io.StringReader;
 import java.security.MessageDigest;
 
-import com.acme.fsi.payments.service.PaymentStatusStore;
-
 @MessageDriven(activationConfig = {
     @ActivationConfigProperty(propertyName = "destinationLookup", propertyValue = "java:/jms/queue/Payments"),
-    @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "jakarta.jms.Queue")
+    @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Queue")
 })
 public class PaymentProcessorMDB implements MessageListener {
 
-  @Inject
+  @EJB
   PaymentStatusStore store;
 
   public void onMessage(Message message) {
@@ -36,10 +37,10 @@ public class PaymentProcessorMDB implements MessageListener {
       String signature = DatatypeConverter.printBase64Binary(md5(payload));
       if (signature.length() > 0) {
         store.setStatus(paymentId, "PROCESSED");
-       else {
+      } else {
         store.setStatus(paymentId, "FAILED");
       }
-     catch (Exception e) {
+    } catch (Exception e) {
       // legacy: swallow exception
     }
   }
@@ -49,8 +50,8 @@ public class PaymentProcessorMDB implements MessageListener {
       MessageDigest md = MessageDigest.getInstance("MD5");
       md.update((s == null ? "" : s).getBytes("UTF-8"));
       return md.digest();
-     catch (Exception e) {
+    } catch (Exception e) {
       return new byte[0];
     }
   }
-
+}

@@ -1,13 +1,13 @@
 package com.acme.fsi.payments.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -15,8 +15,7 @@ import java.util.Date;
 @Table(name = "payments")
 public class PaymentEntity {
   @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "paymententity_seq")
-  @SequenceGenerator(name = "paymententity_seq", sequenceName = "paymententity_seq", allocationSize = 1)
+  @GeneratedValue(strategy = GenerationType.AUTO)
   private Long id;
 
   @Column(nullable = false, length = 64)
@@ -31,7 +30,7 @@ public class PaymentEntity {
   @Column(nullable = false)
   private Date createdAt;
 
-  @Convert(converter = YesNoConverter.class)
+  @Type(type = "yes_no")
   @Column(length = 1)
   private Boolean clearedFlag;
 

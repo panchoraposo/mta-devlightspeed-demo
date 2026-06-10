@@ -1,6 +1,6 @@
 package com.acme.fsi.payments.service;
 
-import jakarta.ejb.Singleton;
+import javax.ejb.Singleton;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
