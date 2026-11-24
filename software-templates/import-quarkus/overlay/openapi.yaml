@@ -1,0 +1,16 @@
+---
+openapi: 3.0.3
+info:
+  title: ${{values.component_id}} API
+  version: 1.0.0-SNAPSHOT
+  description: ${{values.description}}
+servers:
+  - url: http://localhost:8080
+    description: Local
+paths:
+  /:
+    get:
+      summary: Application root
+      responses:
+        "200":
+          description: OK

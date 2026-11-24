@@ -27,11 +27,14 @@ Ese script deja:
 
 ## Prerrequisitos en las VMs
 
-Dos VMs (o una sola si quieres simplificar):
+Dos o tres VMs (o una sola si quieres simplificar):
 
 - **VM EAP 7 (RHEL 8, sin contenedores)**: Java 11 + systemd + unzip.
   - Requiere que descargues el ZIP de **JBoss EAP 7** desde el Customer Portal (lo subimos por SCP).
 - **VM Inventory (Spring Boot 2, sin contenedores)**: Java 11 + systemd.
+- **VM WAS9 / Open Liberty (RHEL 8)**: Java 11 + systemd + unzip.
+  - ZIP de Open Liberty opcional (`OPENLIBERTY_ZIP_PATH`); si falta, el provision lo descarga a `demo/vm/.cache/`.
+  - Puede ser la misma VM que EAP7 (`VM_WAS9_HOST=$VM_EAP7_HOST`).
 
 > Si prefieres, también puedes ejecutar Spring Boot 2 en contenedor, pero para una demo de “VM legacy” suele lucir mejor con `systemd`.
 
@@ -43,7 +46,7 @@ Dos VMs (o una sola si quieres simplificar):
 cp demo/vm/.env.example demo/vm/.env
 ```
 
-2) Ajusta `VM_TRADING_HOST` y `VM_INVENTORY_HOST`.
+2) Ajusta `VM_EAP7_HOST`, `VM_INVENTORY_HOST` y/o `VM_WAS9_HOST`.
 
 ## Flujo rápido (lo que vas a hacer en la demo)
 
@@ -53,10 +56,17 @@ cp demo/vm/.env.example demo/vm/.env
      - `./demo/vm/rhel8/provision-eap7.sh`
      - `./demo/vm/rhel8/provision-postgres.sh`
      - `./demo/vm/rhel8/provision-sb2.sh`
+     - (WAS9) `./demo/vm/rhel8/provision-liberty-was9.sh`
+     - (WAS9) `./demo/vm/rhel8/provision-postgres-was9.sh`
    - Deploy:
      - `./demo/vm/rhel8/deploy-eap7-payments.sh <run_dir>`
      - `./demo/vm/rhel8/deploy-sb2-inventory.sh <run_dir>`
+     - (WAS9) `./demo/vm/rhel8/deploy-liberty-accounts.sh <run_dir>`
+     - (WAS9) `./demo/vm/rhel8/deploy-liberty-cards.sh <run_dir>`
+     - (WAS9) `./demo/vm/rhel8/deploy-liberty-kyc.sh <run_dir>`
 3) Mostrar que las legacy apps corren en VM (curl / navegador).
-4) Modernizar con MTA+Lightspeed desde el run (código fuente).
+4) Modernizar con MTA+Lightspeed desde el run (código fuente) — en laptop **o** Dev Spaces (`demo/devspaces/`).
 5) Build + deploy en OpenShift usando los proyectos modernizados (idealmente `migrated-apps/` o un nuevo `demo/runs/.../modern/`).
+
+Guión WAS9 + Dev Spaces: `demo/demo-script-was9-devspaces-es.md`.
 

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FSI KYC Intake</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #13231c;
+        --paper: #eef4ef;
+        --panel: #f7faf7;
+        --line: #c5d5c9;
+        --accent: #0f6b4c;
+        --accent-2: #1d4e89;
+        --warn: #9a3412;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family: "Source Sans 3", sans-serif;
+        background:
+          linear-gradient(135deg, rgba(15, 107, 76, 0.08), transparent 42%),
+          repeating-linear-gradient(
+            -12deg,
+            rgba(19, 35, 28, 0.03) 0 2px,
+            transparent 2px 14px
+          ),
+          var(--paper);
+      }
+      .shell {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 40px 20px 64px;
+      }
+      .mast {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 28px;
+        padding-bottom: 18px;
+        border-bottom: 3px solid var(--ink);
+      }
+      .mast .eyebrow {
+        font-size: 0.78rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 700;
+      }
+      h1 {
+        margin: 0;
+        font-family: Fraunces, Georgia, serif;
+        font-size: clamp(2rem, 5vw, 3rem);
+        line-height: 1.05;
+        max-width: 12ch;
+      }
+      .mast p {
+        margin: 0;
+        max-width: 46ch;
+        color: #3b4f44;
+        font-size: 1.05rem;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+      }
+      @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 20px;
+      }
+      .panel h2 {
+        margin: 0 0 14px;
+        font-family: Fraunces, Georgia, serif;
+        font-size: 1.35rem;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #40574a;
+      }
+      input, select, button, textarea {
+        width: 100%;
+        margin-top: 6px;
+        font: inherit;
+        border: 1.5px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        padding: 11px 12px;
+        border-radius: 2px;
+      }
+      button {
+        margin-top: 18px;
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--accent-2);
+        border-color: var(--accent-2);
+      }
+      .decision {
+        min-height: 180px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.82rem;
+        white-space: pre-wrap;
+        background: #10241b;
+        color: #d8f3e5;
+        border: none;
+        padding: 14px;
+      }
+      .meta {
+        margin-top: 14px;
+        font-size: 0.85rem;
+        color: #40574a;
+      }
+      .meta a { color: var(--accent-2); }
+      .status-pill {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 4px 10px;
+        border: 1px solid var(--line);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .status-pill.ok { background: #d8f3e5; color: var(--accent); border-color: #9fd7bc; }
+      .status-pill.bad { background: #ffedd5; color: var(--warn); border-color: #fdba74; }
+      .status-pill.mid { background: #e0e7ff; color: var(--accent-2); border-color: #a5b4fc; }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="mast">
+        <div class="eyebrow">Compliance · SOAP intake</div>
+        <h1>KYC Onboarding</h1>
+        <p>Submit a customer application over JAX-WS. Decision comes back with a legacy MD5 audit token — intentional MTA bait.</p>
+      </div>
+      <div class="layout">
+        <section class="panel">
+          <h2>New application</h2>
+          <label>Full name</label>
+          <input id="fullName" value="Ana Perez" />
+          <label>National ID</label>
+          <input id="nationalId" value="CL-12345678" />
+          <label>Country</label>
+          <input id="country" value="CL" />
+          <label>Risk score</label>
+          <input id="riskScore" type="number" value="12" />
+          <button id="btnSubmit">Submit via SOAP</button>
+          <div class="meta">Endpoint: <a id="wsdlLink" href="#" target="_blank" rel="noopener">WSDL</a></div>
+        </section>
+        <section class="panel">
+          <h2>Decision</h2>
+          <div id="statusPill" class="status-pill mid">waiting</div>
+          <pre class="decision" id="decisionOut">Submit an application to see the SOAP response.</pre>
+          <label>Lookup by applicationId</label>
+          <input id="applicationId" placeholder="KYC-…" />
+          <button class="secondary" id="btnStatus">Get status</button>
+        </section>
+      </div>
+    </div>
+    <script>
+      function serviceBase() {
+        let p = window.location.pathname || '/';
+        p = p.replace(/\/index\.html$/, '');
+        if (p.endsWith('/')) p = p.slice(0, -1);
+        return window.location.origin + p + '/KycService';
+      }
+      const ep = serviceBase();
+      document.getElementById('wsdlLink').href = ep + '?wsdl';
+      document.getElementById('wsdlLink').textContent = ep + '?wsdl';
+
+      function setDecision(text, kind) {
+        document.getElementById('decisionOut').textContent = text;
+        const pill = document.getElementById('statusPill');
+        pill.className = 'status-pill ' + (kind || 'mid');
+        pill.textContent = kind === 'ok' ? 'approved' : kind === 'bad' ? 'rejected / review' : 'response';
+      }
+
+      function extractTag(xml, tag) {
+        const re = new RegExp('<(?:[a-zA-Z0-9]+:)?' + tag + '[^>]*>([^<]*)</(?:[a-zA-Z0-9]+:)?' + tag + '>', 'i');
+        const m = xml.match(re);
+        return m ? m[1] : '';
+      }
+
+      async function soapCall(bodyXml) {
+        const envelope =
+          '<?xml version="1.0"?>' +
+          '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:kyc="http://fsi.acme.com/kyc">' +
+          '<soapenv:Body>' + bodyXml + '</soapenv:Body></soapenv:Envelope>';
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/xml; charset=utf-8',
+            'SOAPAction': '""'
+          },
+          body: envelope
+        });
+        const text = await res.text();
+        return { ok: res.ok, text };
+      }
+
+      document.getElementById('btnSubmit').addEventListener('click', async () => {
+        setDecision('Sending SOAP submitApplication…', 'mid');
+        const fullName = document.getElementById('fullName').value;
+        const nationalId = document.getElementById('nationalId').value;
+        const country = document.getElementById('country').value;
+        const riskScore = document.getElementById('riskScore').value;
+        const body =
+          '<kyc:submitApplication><application>' +
+          '<fullName>' + fullName + '</fullName>' +
+          '<nationalId>' + nationalId + '</nationalId>' +
+          '<country>' + country + '</country>' +
+          '<riskScore>' + riskScore + '</riskScore>' +
+          '</application></kyc:submitApplication>';
+        const r = await soapCall(body);
+        const appId = extractTag(r.text, 'applicationId');
+        const status = extractTag(r.text, 'status');
+        if (appId) document.getElementById('applicationId').value = appId;
+        const kind = status === 'APPROVED' ? 'ok' : (status === 'REJECTED' ? 'bad' : 'mid');
+        setDecision(r.text, kind);
+      });
+
+      document.getElementById('btnStatus').addEventListener('click', async () => {
+        const id = document.getElementById('applicationId').value.trim();
+        if (!id) { setDecision('applicationId required', 'bad'); return; }
+        setDecision('Sending SOAP getStatus…', 'mid');
+        const body = '<kyc:getStatus><applicationId>' + id + '</applicationId></kyc:getStatus>';
+        const r = await soapCall(body);
+        const status = extractTag(r.text, 'status');
+        const kind = status === 'APPROVED' ? 'ok' : (status === 'REJECTED' || status === 'NOT_FOUND' ? 'bad' : 'mid');
+        setDecision(r.text, kind);
+      });
+    </script>
+  </body>
+</html>

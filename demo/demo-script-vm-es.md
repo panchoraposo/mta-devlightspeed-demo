@@ -62,11 +62,27 @@ Toma nota del `run_dir` que imprime (por ejemplo `demo/runs/20260420T185828`).
 
 ### Validación rápida (desde tu laptop)
 
-- Trading (WildFly):
+- Payments (EAP7):
   - `POST http://<VM_EAP7_HOST>:8080/fsi-payments/api/payments`
   - `GET  http://<VM_EAP7_HOST>:8080/fsi-payments/api/payments/<paymentId>`
 - Inventory (Spring Boot 2):
   - `GET http://<VM_INVENTORY_HOST>:8082/api/v1/inventory/products`
+
+### Track opcional: WAS9 / Open Liberty
+
+```bash
+./demo/vm/rhel8/provision-liberty-was9.sh
+./demo/vm/rhel8/provision-postgres-was9.sh
+./demo/vm/rhel8/deploy-liberty-accounts.sh demo/runs/<timestamp>
+./demo/vm/rhel8/deploy-liberty-cards.sh demo/runs/<timestamp>
+./demo/vm/rhel8/deploy-liberty-kyc.sh demo/runs/<timestamp>
+```
+
+- Accounts: `http://<VM_WAS9_HOST>:9080/fsi-accounts/api/accounts`
+- Cards: `http://<VM_WAS9_HOST>:9080/fsi-cards/api/auths`
+- KYC WSDL: `http://<VM_WAS9_HOST>:9080/fsi-kyc/KycService?wsdl`
+
+Guión completo (Dev Spaces): `demo/demo-script-was9-devspaces-es.md`.
 
 ## Paso 3: Modernización con MTA + Lightspeed (en el IDE)
 
@@ -74,13 +90,17 @@ Abre el código **del run** (no `demo/source-apps`):
 
 - `demo/runs/<timestamp>/apps/fsi-payments-eap7-legacy`
 - `demo/runs/<timestamp>/apps/fsi-inventory-springboot2-legacy`
+- (WAS9) `demo/runs/<timestamp>/apps/fsi-*-was9-legacy`
 
 Recomendación de targets para maximizar issues:
 
-- Trading:
+- Payments / Accounts / Cards / KYC:
   - `quarkus` (o `quarkus3+`) + `openjdk17`
+  - WAS9: además source technology **`websphere`**
 - Inventory:
   - `spring-boot` (o `spring-boot3+`) + `openjdk17`
+
+Puedes hacerlo en **VS Code local** o en **OpenShift Dev Spaces** (`demo/devspaces/`).
 
 Elige 3–6 issues “mandatory/high effort” y pide fixes. Vuelve a ejecutar el análisis.
 

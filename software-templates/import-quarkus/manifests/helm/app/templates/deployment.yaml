@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "quarkus-template.name" . }}
+  labels:
+    {{- include "quarkus-template.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "quarkus-template.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "quarkus-template.selectorLabels" . | nindent 8 }}
+        {{- include "backstage.labels" . | nindent 8 }}
+        app.openshift.io/runtime: {{ .Values.runtime | default "quarkus" }}
+    spec:
+      serviceAccountName: {{ include "quarkus-template.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {%- if values.database == "postgresql" %}
+      initContainers:
+        - name: wait-for-db
+          image: quay.io/sclorg/postgresql-16-c9s:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              for i in $(seq 1 60); do
+                pg_isready -h {{ include "quarkus-template.name" . }}-db -p 5432 && exit 0
+                sleep 2
+              done
+              exit 1
+      {%- endif %}
+      containers:
+        - name: {{ .Values.runtime | default "quarkus" }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "quarkus-template.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {%- if values.database == "postgresql" %}
+          env:
+            - name: QUARKUS_DATASOURCE_DB_KIND
+              value: postgresql
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: ${{ values.db_user }}
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: ${{ values.db_password }}
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: jdbc:postgresql://{{ include "quarkus-template.name" . }}-db:5432/${{ values.db_name }}
+            - name: QUARKUS_HIBERNATE_ORM_SCHEMA_MANAGEMENT_STRATEGY
+              value: update
+          {%- endif %}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

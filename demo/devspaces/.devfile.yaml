@@ -1,0 +1,73 @@
+schemaVersion: 2.2.0
+metadata:
+  name: mta-was9-lightspeed
+  displayName: MTA WAS9 → Quarkus (Developer Lightspeed)
+  description: Analyze WAS9/Liberty FSI apps with MTA and fix issues with Developer Lightspeed in OpenShift Dev Spaces
+  tags: [Java, MTA, Lightspeed, WebSphere, Quarkus]
+  projectType: java
+components:
+  - name: tools
+    container:
+      image: registry.redhat.io/devspaces/udi-rhel9:latest
+      memoryLimit: 8Gi
+      memoryRequest: 2Gi
+      cpuLimit: "4"
+      cpuRequest: "500m"
+      mountSources: true
+      endpoints:
+        - name: http-accounts
+          targetPort: 8088
+        - name: http-default
+          targetPort: 8080
+      env:
+        - name: MAVEN_OPTS
+          value: "-Xmx1g"
+        - name: MTA_HOME
+          value: /home/user/mta
+        - name: PATH
+          value: /home/user/mta:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+commands:
+  - id: bootstrap-workspace
+    exec:
+      label: Bootstrap MTA CLI + VS Code settings
+      component: tools
+      commandLine: bash demo/devspaces/scripts/bootstrap-workspace.sh
+      workingDir: ${PROJECT_SOURCE}
+  - id: install-mta-cli
+    exec:
+      label: Install Linux MTA CLI (into ~/mta)
+      component: tools
+      commandLine: bash demo/devspaces/scripts/install-mta-cli.sh
+      workingDir: ${PROJECT_SOURCE}
+  - id: package-accounts
+    exec:
+      label: Maven package fsi-accounts-was9-legacy
+      component: tools
+      commandLine: mvn -q -f apps/fsi-accounts-was9-legacy/pom.xml package
+      workingDir: ${PROJECT_SOURCE}
+  - id: package-cards
+    exec:
+      label: Maven package fsi-cards-was9-legacy
+      component: tools
+      commandLine: mvn -q -f apps/fsi-cards-was9-legacy/pom.xml package
+      workingDir: ${PROJECT_SOURCE}
+  - id: package-kyc
+    exec:
+      label: Maven package fsi-kyc-was9-legacy
+      component: tools
+      commandLine: mvn -q -f apps/fsi-kyc-was9-legacy/pom.xml package
+      workingDir: ${PROJECT_SOURCE}
+  - id: mta-hint
+    exec:
+      label: Print MTA / Lightspeed profile hint
+      component: tools
+      commandLine: |
+        echo "1) Run 'Install Linux MTA CLI' if analyzerPath is missing"
+        echo "2) Install MTA VS Code extension (recommended in .vscode/extensions.json)"
+        echo "3) Analysis profile: source=websphere, targets=quarkus,openjdk17"
+        echo "4) Configure LLM via Command Palette: MTA: Open the Gen AI model provider configuration file"
+        echo "5) Analyze apps under apps/*-was9-legacy or a demo/runs/<ts>/apps copy"
+      workingDir: ${PROJECT_SOURCE}
+events:
+  postStart:
+    - bootstrap-workspace

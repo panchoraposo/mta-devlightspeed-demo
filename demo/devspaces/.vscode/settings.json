@@ -1,0 +1,11 @@
+{
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.compile.nullAnalysis.mode": "disabled",
+  "mta-core.analyzerPath": "/home/user/mta/linux-mta-cli",
+  "mta-core.genai.enabled": true,
+  "mta-core.genai.agentMode": true,
+  "files.exclude": {
+    "**/target": true,
+    "**/.cache": true
+  }
+}

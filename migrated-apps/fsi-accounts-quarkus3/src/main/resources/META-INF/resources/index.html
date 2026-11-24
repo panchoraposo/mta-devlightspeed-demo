@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FSI Accounts (Quarkus 3)</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; background: #fafafa; }
+      .container { max-width: 1100px; margin: 0 auto; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+      .card { border: 1px solid #e6e6e6; border-radius: 12px; padding: 16px; background: #fff; }
+      label { display: block; font-size: 12px; color: #444; margin-top: 10px; }
+      input, select { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
+      button { margin-top: 12px; padding: 10px 12px; border: 1px solid #222; background: #111; color: #fff; border-radius: 10px; cursor: pointer; }
+      button.secondary { background: #fff; color: #111; }
+      pre { background: #f6f6f6; padding: 10px; border-radius: 8px; overflow: auto; white-space: pre-wrap; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 13px; }
+      .muted { color: #666; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>FSI Accounts (Quarkus 3)</h2>
+      <p class="muted">Core banking demo: Red Hat Build of Quarkus 3 + REST + Hibernate ORM.</p>
+      <div class="grid">
+        <div class="card">
+          <h3>Abrir cuenta</h3>
+          <label>Customer ID</label>
+          <input id="customerId" value="CUST-2001" />
+          <label>Account type</label>
+          <select id="accountType">
+            <option>CHECKING</option>
+            <option>SAVINGS</option>
+            <option>MONEY_MARKET</option>
+          </select>
+          <label>Opening balance</label>
+          <input id="openingBalance" value="500.00" />
+          <label>Currency</label>
+          <select id="currency">
+            <option>USD</option>
+            <option>EUR</option>
+            <option>GBP</option>
+          </select>
+          <button id="btnOpen">Open</button>
+          <div id="openOut"></div>
+        </div>
+        <div class="card">
+          <h3>Consultar cuenta</h3>
+          <label>accountId</label>
+          <input id="accountId" placeholder="ACC-..." />
+          <button class="secondary" id="btnGet">Consultar</button>
+          <div id="getOut"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <h3>Últimas cuentas</h3>
+        <button class="secondary" id="btnRefresh">Actualizar</button>
+        <div id="listOut" style="margin-top:10px"></div>
+      </div>
+    </div>
+    <script>
+      function apiBasePath() { return '/api'; }
+      const apiBase = apiBasePath();
+      function esc(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+      async function postJson(url, body) {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        return { ok: res.ok, text: await res.text() };
+      }
+      async function getText(url) {
+        const res = await fetch(url);
+        return { ok: res.ok, text: await res.text() };
+      }
+      document.getElementById('btnOpen').addEventListener('click', async () => {
+        const payload = {
+          customerId: document.getElementById('customerId').value,
+          accountType: document.getElementById('accountType').value,
+          openingBalance: Number(document.getElementById('openingBalance').value),
+          currency: document.getElementById('currency').value
+        };
+        const out = document.getElementById('openOut');
+        out.innerHTML = '<div class="muted">Enviando...</div>';
+        const r = await postJson(apiBase + '/accounts', payload);
+        out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+        try {
+          const obj = JSON.parse(r.text);
+          if (obj && obj.accountId) document.getElementById('accountId').value = obj.accountId;
+        } catch (_) {}
+      });
+      document.getElementById('btnGet').addEventListener('click', async () => {
+        const id = document.getElementById('accountId').value;
+        const out = document.getElementById('getOut');
+        out.innerHTML = '<div class="muted">Cargando...</div>';
+        const r = await getText(apiBase + '/accounts/' + encodeURIComponent(id));
+        out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+      });
+      async function refreshList() {
+        const out = document.getElementById('listOut');
+        out.innerHTML = '<div class="muted">Cargando...</div>';
+        const r = await getText(apiBase + '/accounts?limit=10');
+        if (!r.ok) { out.innerHTML = '<pre>' + esc(r.text) + '</pre>'; return; }
+        try {
+          const rows = JSON.parse(r.text);
+          if (!Array.isArray(rows) || !rows.length) { out.innerHTML = '<div class="muted">No data</div>'; return; }
+          let html = '<table><thead><tr><th>accountId</th><th>customer</th><th>type</th><th>balance</th><th>ccy</th></tr></thead><tbody>';
+          for (const row of rows) {
+            html += '<tr><td><a href="#" data-id="' + esc(row.accountId) + '">' + esc(row.accountId) + '</a></td>' +
+              '<td>' + esc(row.customerId) + '</td><td>' + esc(row.accountType) + '</td>' +
+              '<td>' + esc(row.balance) + '</td><td>' + esc(row.currency) + '</td></tr>';
+          }
+          html += '</tbody></table>';
+          out.innerHTML = html;
+          out.querySelectorAll('a[data-id]').forEach(a => {
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              document.getElementById('accountId').value = a.getAttribute('data-id');
+              document.getElementById('btnGet').click();
+            });
+          });
+        } catch (e) {
+          out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+        }
+      }
+      document.getElementById('btnRefresh').addEventListener('click', refreshList);
+      refreshList();
+    </script>
+  </body>
+</html>

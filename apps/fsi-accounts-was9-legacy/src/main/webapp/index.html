@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FSI Core Ledger</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --navy: #0b1f3a;
+        --ink: #142033;
+        --sand: #f3efe6;
+        --panel: rgba(255, 255, 255, 0.92);
+        --line: #d7d0c3;
+        --copper: #b45309;
+        --sky: #2563eb;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+        background:
+          linear-gradient(120deg, rgba(11, 31, 58, 0.92), rgba(11, 31, 58, 0.75)),
+          radial-gradient(circle at 20% 20%, #3b82f6 0, transparent 35%),
+          radial-gradient(circle at 80% 0%, #b45309 0, transparent 28%),
+          var(--navy);
+      }
+      .frame {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 36px 20px 56px;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 22px;
+        color: #f8fafc;
+      }
+      @media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+      .hero h1 {
+        margin: 0;
+        font-family: Newsreader, Georgia, serif;
+        font-size: clamp(2.4rem, 6vw, 3.6rem);
+        line-height: 0.95;
+        max-width: 9ch;
+      }
+      .hero p {
+        margin: 12px 0 0;
+        max-width: 36ch;
+        color: #cbd5e1;
+        font-size: 1.05rem;
+      }
+      .hero-meta {
+        border-left: 3px solid var(--copper);
+        padding: 8px 0 8px 14px;
+        font-size: 0.9rem;
+        color: #e2e8f0;
+      }
+      .hero-meta strong { display: block; font-size: 1.1rem; color: #fff; }
+      .board {
+        background: var(--sand);
+        border: 1px solid #e7e0d4;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+      }
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        padding: 14px 18px;
+        background: #ebe5da;
+        border-bottom: 1px solid var(--line);
+      }
+      .toolbar h2 {
+        margin: 0;
+        font-family: Newsreader, Georgia, serif;
+        font-size: 1.35rem;
+      }
+      .body {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        min-height: 420px;
+      }
+      @media (max-width: 860px) { .body { grid-template-columns: 1fr; } }
+      .form-rail {
+        padding: 18px;
+        border-right: 1px solid var(--line);
+        background: #f7f3ea;
+      }
+      @media (max-width: 860px) { .form-rail { border-right: 0; border-bottom: 1px solid var(--line); } }
+      .form-rail h3 {
+        margin: 0 0 8px;
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6b6256;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #4b5563;
+      }
+      input, select, button {
+        width: 100%;
+        margin-top: 6px;
+        font: inherit;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        padding: 10px 12px;
+        border-radius: 0;
+      }
+      button {
+        margin-top: 14px;
+        background: var(--navy);
+        color: #fff;
+        border-color: var(--navy);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--navy);
+      }
+      .out {
+        margin-top: 10px;
+        font-size: 0.82rem;
+        color: #334155;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .ledger {
+        padding: 18px;
+        background: var(--panel);
+      }
+      .lookup {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        margin-bottom: 16px;
+        align-items: end;
+      }
+      .lookup > div { min-width: 0; }
+      .lookup button { margin-top: 6px; width: auto; min-width: 120px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 11px 8px; border-bottom: 1px solid #e8e2d7; font-size: 0.92rem; }
+      th {
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b6256;
+      }
+      td a { color: var(--sky); text-decoration: none; font-weight: 600; }
+      .bal { font-variant-numeric: tabular-nums; font-weight: 700; }
+      .empty { color: #6b6256; padding: 20px 0; }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <section class="hero">
+        <div>
+          <h1>Core Ledger</h1>
+          <p>Open / query deposit accounts on the WAS9 Liberty stack — REST + EJB + JPA.</p>
+        </div>
+        <div class="hero-meta">
+          <strong>fsi-accounts</strong>
+          Runtime · Open Liberty · Java EE 7
+        </div>
+      </section>
+
+      <section class="board">
+        <div class="toolbar">
+          <h2>Account book</h2>
+          <button class="ghost" id="btnRefresh" style="width:auto;margin:0;min-width:0">Refresh book</button>
+        </div>
+        <div class="body">
+          <aside class="form-rail">
+            <h3>Open account</h3>
+            <label>Customer ID</label>
+            <input id="customerId" value="CUST-2001" />
+            <label>Type</label>
+            <select id="accountType">
+              <option>CHECKING</option>
+              <option>SAVINGS</option>
+              <option>MONEY_MARKET</option>
+            </select>
+            <label>Opening balance</label>
+            <input id="openingBalance" value="500.00" />
+            <label>Currency</label>
+            <select id="currency">
+              <option>USD</option>
+              <option>EUR</option>
+              <option>GBP</option>
+            </select>
+            <button id="btnOpen">Open</button>
+            <div class="out" id="openOut"></div>
+          </aside>
+          <div class="ledger">
+            <div class="lookup">
+              <div>
+                <label>Lookup accountId</label>
+                <input id="accountId" placeholder="ACC-…" />
+              </div>
+              <button class="ghost" id="btnGet">Consultar</button>
+            </div>
+            <div class="out" id="getOut"></div>
+            <div id="listOut" class="empty">Loading ledger…</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script>
+      function apiBasePath() {
+        let p = window.location.pathname || '/';
+        p = p.replace(/\/index\.html$/, '');
+        if (p.endsWith('/')) p = p.slice(0, -1);
+        return p + '/api';
+      }
+      const apiBase = apiBasePath();
+      function esc(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+      async function postJson(url, body) {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        return { ok: res.ok, text: await res.text() };
+      }
+      async function getText(url) {
+        const res = await fetch(url);
+        return { ok: res.ok, text: await res.text() };
+      }
+      document.getElementById('btnOpen').addEventListener('click', async () => {
+        const payload = {
+          customerId: document.getElementById('customerId').value,
+          accountType: document.getElementById('accountType').value,
+          openingBalance: Number(document.getElementById('openingBalance').value),
+          currency: document.getElementById('currency').value
+        };
+        const out = document.getElementById('openOut');
+        out.textContent = 'Opening…';
+        const r = await postJson(apiBase + '/accounts', payload);
+        out.textContent = r.text;
+        try {
+          const obj = JSON.parse(r.text);
+          if (obj && obj.accountId) document.getElementById('accountId').value = obj.accountId;
+        } catch (_) {}
+        refreshList();
+      });
+      document.getElementById('btnGet').addEventListener('click', async () => {
+        const id = document.getElementById('accountId').value;
+        const out = document.getElementById('getOut');
+        out.textContent = 'Loading…';
+        const r = await getText(apiBase + '/accounts/' + encodeURIComponent(id));
+        out.textContent = r.text;
+      });
+      async function refreshList() {
+        const out = document.getElementById('listOut');
+        out.className = 'empty';
+        out.textContent = 'Loading ledger…';
+        const r = await getText(apiBase + '/accounts?limit=10');
+        if (!r.ok) { out.textContent = r.text; return; }
+        try {
+          const rows = JSON.parse(r.text);
+          if (!Array.isArray(rows) || !rows.length) { out.textContent = 'No accounts yet'; return; }
+          let html = '<table><thead><tr><th>Account</th><th>Customer</th><th>Type</th><th>Balance</th><th>CCY</th></tr></thead><tbody>';
+          for (const row of rows) {
+            html += '<tr><td><a href="#" data-id="' + esc(row.accountId) + '">' + esc(row.accountId) + '</a></td>' +
+              '<td>' + esc(row.customerId) + '</td><td>' + esc(row.accountType) + '</td>' +
+              '<td class="bal">' + esc(row.balance) + '</td><td>' + esc(row.currency) + '</td></tr>';
+          }
+          html += '</tbody></table>';
+          out.className = '';
+          out.innerHTML = html;
+          out.querySelectorAll('a[data-id]').forEach(a => {
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              document.getElementById('accountId').value = a.getAttribute('data-id');
+              document.getElementById('btnGet').click();
+            });
+          });
+        } catch (e) {
+          out.textContent = r.text;
+        }
+      }
+      document.getElementById('btnRefresh').addEventListener('click', refreshList);
+      refreshList();
+    </script>
+  </body>
+</html>

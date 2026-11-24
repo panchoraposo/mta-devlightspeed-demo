@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FSI Fraud Desk</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #071018;
+        --panel: #0d1a24;
+        --line: #1e3344;
+        --text: #d7e6ef;
+        --muted: #7f9aad;
+        --accent: #2dd4bf;
+        --warn: #fbbf24;
+        --danger: #fb7185;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: "IBM Plex Sans", sans-serif;
+        background:
+          radial-gradient(1200px 500px at 10% -10%, rgba(45, 212, 191, 0.12), transparent 60%),
+          linear-gradient(180deg, #050b10 0%, var(--bg) 40%, #0a1520 100%);
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 16px;
+        padding: 28px 32px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 {
+        margin: 0;
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      header p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; }
+      .badge {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.75rem;
+        color: var(--accent);
+        border: 1px solid rgba(45, 212, 191, 0.35);
+        padding: 8px 12px;
+        white-space: nowrap;
+      }
+      main { padding: 24px 32px 40px; max-width: 1200px; margin: 0 auto; }
+      .rail {
+        display: grid;
+        grid-template-columns: 1.4fr 0.9fr;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      @media (max-width: 900px) { .rail { grid-template-columns: 1fr; } header { flex-direction: column; align-items: start; } }
+      .strip, .side, .feed {
+        background: rgba(13, 26, 36, 0.92);
+        border: 1px solid var(--line);
+      }
+      .strip { padding: 18px; }
+      .strip h2, .side h2, .feed h2 {
+        margin: 0 0 12px;
+        font-size: 0.78rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .fields {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr) auto;
+        gap: 10px;
+        align-items: end;
+      }
+      @media (max-width: 900px) { .fields { grid-template-columns: 1fr 1fr; } }
+      label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.08em; text-transform: uppercase; }
+      input, select, button {
+        width: 100%;
+        font: inherit;
+        border-radius: 0;
+        border: 1px solid var(--line);
+        background: #08131c;
+        color: var(--text);
+        padding: 10px 12px;
+      }
+      input:focus, select:focus { outline: 1px solid var(--accent); }
+      button {
+        cursor: pointer;
+        background: var(--accent);
+        color: #04201c;
+        border-color: var(--accent);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        min-width: 140px;
+      }
+      button.ghost {
+        background: transparent;
+        color: var(--text);
+        border-color: var(--line);
+      }
+      .side { padding: 18px; }
+      .side .row { display: grid; gap: 10px; }
+      .out {
+        margin-top: 12px;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.78rem;
+        color: var(--accent);
+        white-space: pre-wrap;
+        min-height: 1.2em;
+      }
+      .feed { padding: 18px; }
+      .feed-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+      table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+      th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+      td a { color: var(--accent); text-decoration: none; font-family: "IBM Plex Mono", monospace; font-size: 0.78rem; }
+      .flag-y { color: var(--danger); font-weight: 700; }
+      .flag-n { color: var(--warn); }
+      .empty { color: var(--muted); padding: 12px 0; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Fraud Desk</h1>
+        <p>Card authorization queue + async MDB risk check — WAS9 / Open Liberty</p>
+      </div>
+      <div class="badge">CHANNEL · JMS / MDB</div>
+    </header>
+    <main>
+      <div class="rail">
+        <section class="strip">
+          <h2>Authorize transaction</h2>
+          <div class="fields">
+            <div>
+              <label>PAN</label>
+              <input id="pan" value="4111111111111111" />
+            </div>
+            <div>
+              <label>Merchant</label>
+              <input id="merchantId" value="MERCH-9001" />
+            </div>
+            <div>
+              <label>Amount</label>
+              <input id="amount" value="42.50" />
+            </div>
+            <div>
+              <label>CCY</label>
+              <select id="currency"><option>USD</option><option>EUR</option></select>
+            </div>
+            <button id="btnAuth">Push</button>
+          </div>
+          <div class="out" id="authOut"></div>
+        </section>
+        <section class="side">
+          <h2>Lookup status</h2>
+          <div class="row">
+            <div>
+              <label>authId</label>
+              <input id="authId" placeholder="uuid…" />
+            </div>
+            <button class="ghost" id="btnStatus">Inspect</button>
+          </div>
+          <div class="out" id="statusOut"></div>
+        </section>
+      </div>
+      <section class="feed">
+        <div class="feed-head">
+          <h2 style="margin:0">Authorization tape</h2>
+          <button class="ghost" id="btnRefresh" style="width:auto;min-width:0">Refresh</button>
+        </div>
+        <div id="listOut" class="empty">Loading…</div>
+      </section>
+    </main>
+    <script>
+      function apiBasePath() {
+        let p = window.location.pathname || '/';
+        p = p.replace(/\/index\.html$/, '');
+        if (p.endsWith('/')) p = p.slice(0, -1);
+        return p + '/api';
+      }
+      const apiBase = apiBasePath();
+      function esc(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+      async function postJson(url, body) {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        return { ok: res.ok, text: await res.text() };
+      }
+      async function getText(url) {
+        const res = await fetch(url);
+        return { ok: res.ok, text: await res.text() };
+      }
+      document.getElementById('btnAuth').addEventListener('click', async () => {
+        const payload = {
+          pan: document.getElementById('pan').value,
+          merchantId: document.getElementById('merchantId').value,
+          amount: Number(document.getElementById('amount').value),
+          currency: document.getElementById('currency').value
+        };
+        const out = document.getElementById('authOut');
+        out.textContent = 'enqueueing…';
+        const r = await postJson(apiBase + '/auths', payload);
+        out.textContent = r.text;
+        try {
+          const obj = JSON.parse(r.text);
+          if (obj && obj.authId) document.getElementById('authId').value = obj.authId;
+        } catch (_) {}
+        refreshList();
+      });
+      document.getElementById('btnStatus').addEventListener('click', async () => {
+        const id = document.getElementById('authId').value;
+        const out = document.getElementById('statusOut');
+        out.textContent = 'polling…';
+        const r = await getText(apiBase + '/auths/' + encodeURIComponent(id));
+        out.textContent = r.text;
+      });
+      async function refreshList() {
+        const out = document.getElementById('listOut');
+        out.className = 'empty';
+        out.textContent = 'Loading…';
+        const r = await getText(apiBase + '/auths?limit=10');
+        if (!r.ok) { out.textContent = r.text; return; }
+        try {
+          const rows = JSON.parse(r.text);
+          if (!Array.isArray(rows) || !rows.length) { out.textContent = 'No authorizations yet'; return; }
+          let html = '<table><thead><tr><th>authId</th><th>merchant</th><th>amount</th><th>ccy</th><th>flag</th></tr></thead><tbody>';
+          for (const row of rows) {
+            const flag = row.flaggedFlag === 'Y' ? 'flag-y' : 'flag-n';
+            html += '<tr><td><a href="#" data-id="' + esc(row.authId) + '">' + esc(row.authId) + '</a></td>' +
+              '<td>' + esc(row.merchantId) + '</td><td>' + esc(row.amount) + '</td>' +
+              '<td>' + esc(row.currency) + '</td><td class="' + flag + '">' + esc(row.flaggedFlag) + '</td></tr>';
+          }
+          html += '</tbody></table>';
+          out.className = '';
+          out.innerHTML = html;
+          out.querySelectorAll('a[data-id]').forEach(a => {
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              document.getElementById('authId').value = a.getAttribute('data-id');
+              document.getElementById('btnStatus').click();
+            });
+          });
+        } catch (e) {
+          out.textContent = r.text;
+        }
+      }
+      document.getElementById('btnRefresh').addEventListener('click', refreshList);
+      refreshList();
+    </script>
+  </body>
+</html>

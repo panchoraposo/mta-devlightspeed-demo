@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "redhat.mta-vscode-extension",
+    "redhat.java",
+    "vscjava.vscode-java-pack",
+    "redhat.vscode-xml"
+  ]
+}

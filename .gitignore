@@ -4,8 +4,14 @@
 **/.settings/
 **/.idea/
 **/*.iml
-**/.vscode/
+# Ignore IDE vscode dirs, but keep the Dev Spaces MTA recommendations in-repo
+**/.vscode/**
+!demo/devspaces/.vscode/
+!demo/devspaces/.vscode/**
 .DS_Store
+
+# Open Liberty download cache
+demo/vm/.cache/
 
 # Editor metadata (generated)
 .metadata/
@@ -16,6 +22,11 @@
 # Local MTA CLI bundle (too large for git)
 mta-*-cli-*.zip
 mta-*-cli-*/
+
+# Large runtime / analysis artifacts (download locally)
+jboss-eap-*.zip
+openliberty-*.zip
+fsi-payments.json
 
 # Demo run workdirs (avoid accidental overwrites)
 demo/runs/
