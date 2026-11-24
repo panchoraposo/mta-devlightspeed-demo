@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Best-effort MTA CLI install for Dev Spaces. Do not fail the workspace if download is blocked.
+set -uo pipefail
 
 MTA_HOME="${MTA_HOME:-/home/user/mta}"
-MTA_VERSION="${MTA_VERSION:-8.1.0}"
-# Official CLI archives follow the pattern used by MTA releases on developers.redhat.com / mirror.
-# Override MTA_CLI_URL if your cluster cannot reach the default host.
-DEFAULT_URL="https://github.com/konveyor/analyzer-lsp/releases/download/v0.6.0/kantra.linux.amd64"
-# Prefer a full MTA CLI tarball when provided; otherwise install kantra-compatible binary name expected by the extension.
+DEFAULT_URL="${MTA_DEFAULT_URL:-https://github.com/konveyor/analyzer-lsp/releases/download/v0.6.0/kantra.linux.amd64}"
 MTA_CLI_URL="${MTA_CLI_URL:-}"
 
 mkdir -p "${MTA_HOME}"
@@ -17,27 +14,48 @@ if [[ -x "${MTA_HOME}/linux-mta-cli" ]] || [[ -x "${MTA_HOME}/mta-cli" ]]; then
   exit 0
 fi
 
-if [[ -n "${MTA_CLI_URL}" ]]; then
-  echo "Downloading MTA CLI from ${MTA_CLI_URL}"
-  TMP="$(mktemp -d)"
-  curl -fL --retry 3 -o "${TMP}/mta.tgz" "${MTA_CLI_URL}"
-  tar -xzf "${TMP}/mta.tgz" -C "${TMP}"
-  # Find a binary named *mta-cli* or kantra and install as linux-mta-cli
-  BIN="$(find "${TMP}" -type f \( -name 'linux-mta-cli' -o -name 'mta-cli' -o -name 'kantra*' \) | head -n 1)"
-  if [[ -z "${BIN}" ]]; then
-    echo "Could not find CLI binary in archive" >&2
-    exit 1
+download() {
+  local url="$1"
+  local out="$2"
+  echo "Downloading: ${url}"
+  # --fail-with-body gives curl exit 22 on HTTP errors; capture and soft-fail
+  if ! curl -fL --retry 3 --connect-timeout 20 --max-time 180 -o "${out}.partial" "${url}"; then
+    echo "WARN: download failed (network policy / URL). Install MTA CLI manually later." >&2
+    rm -f "${out}.partial"
+    return 1
   fi
-  cp "${BIN}" "${MTA_HOME}/linux-mta-cli"
-  chmod +x "${MTA_HOME}/linux-mta-cli"
+  mv "${out}.partial" "${out}"
+  chmod +x "${out}"
+  return 0
+}
+
+if [[ -n "${MTA_CLI_URL}" ]]; then
+  TMP="$(mktemp -d)"
+  if curl -fL --retry 3 --connect-timeout 20 --max-time 180 -o "${TMP}/mta.tgz" "${MTA_CLI_URL}"; then
+    tar -xzf "${TMP}/mta.tgz" -C "${TMP}" || true
+    BIN="$(find "${TMP}" -type f \( -name 'linux-mta-cli' -o -name 'mta-cli' -o -name 'kantra*' \) | head -n 1)"
+    if [[ -n "${BIN}" ]]; then
+      cp "${BIN}" "${MTA_HOME}/linux-mta-cli"
+      chmod +x "${MTA_HOME}/linux-mta-cli"
+    else
+      echo "WARN: archive downloaded but no CLI binary found" >&2
+    fi
+  else
+    echo "WARN: MTA_CLI_URL download failed" >&2
+  fi
   rm -rf "${TMP}"
 else
-  echo "No MTA_CLI_URL set — installing analyzer binary as ${MTA_HOME}/linux-mta-cli from ${DEFAULT_URL}"
-  echo "For the full Red Hat MTA CLI, set MTA_CLI_URL to your licensed/downloadable archive."
-  curl -fL --retry 3 -o "${MTA_HOME}/linux-mta-cli" "${DEFAULT_URL}"
-  chmod +x "${MTA_HOME}/linux-mta-cli"
+  download "${DEFAULT_URL}" "${MTA_HOME}/linux-mta-cli" || true
 fi
 
-echo "Installed:"
-ls -la "${MTA_HOME}/linux-mta-cli"
-echo "Configure VS Code setting mta-core.analyzerPath=${MTA_HOME}/linux-mta-cli"
+if [[ -x "${MTA_HOME}/linux-mta-cli" ]]; then
+  echo "Installed:"
+  ls -la "${MTA_HOME}/linux-mta-cli"
+  echo "Configure VS Code setting mta-core.analyzerPath=${MTA_HOME}/linux-mta-cli"
+  exit 0
+fi
+
+echo "MTA CLI not installed yet. In the IDE terminal run:"
+echo "  bash demo/devspaces/scripts/install-mta-cli.sh"
+echo "Or set env MTA_CLI_URL to a reachable archive URL and re-run."
+exit 0

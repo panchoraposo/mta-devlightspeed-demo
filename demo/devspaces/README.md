@@ -18,9 +18,9 @@ Or create a workspace from the Dev Spaces UI and select this Devfile path.
 
 ## One-time setup inside the workspace
 
-1. **MTA CLI (Linux)** — the Devfile `postStart` runs `scripts/install-mta-cli.sh`.
-   - Default installs a Linux analyzer binary at `/home/user/mta/linux-mta-cli`.
-   - For the full Red Hat MTA CLI archive, set env `MTA_CLI_URL` on the Devfile/container to your downloadable tarball URL, then re-run the install command.
+1. **MTA CLI (Linux)** — `postStart` tries `scripts/install-mta-cli.sh` but **will not block** the IDE if GitHub/download is unreachable (common on locked-down clusters).
+   - If `/home/user/mta/linux-mta-cli` is missing, run the Devfile command **Install Linux MTA CLI** (or the script in a terminal).
+   - For air-gapped / no-GitHub clusters, set env `MTA_CLI_URL` to an internal mirror of the Red Hat MTA CLI tarball, then re-run install.
 2. **MTA / Lightspeed extension** — accept the recommendation in `.vscode/extensions.json` (`redhat.mta-vscode-extension`).
 3. **LLM provider** — Command Palette → `MTA: Open the Gen AI model provider configuration file` and configure an OpenAI-compatible endpoint (OpenShift AI / MaaS), for example:
 
