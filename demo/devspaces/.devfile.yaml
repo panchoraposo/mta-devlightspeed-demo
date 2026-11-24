@@ -20,15 +20,13 @@ components:
         - name: http-default
           targetPort: 8080
       env:
+        # UDI selects SDKMAN JDK 17 and wires JAVA_HOME + PATH (do not override PATH).
+        - name: USE_JAVA17
+          value: "true"
         - name: MAVEN_OPTS
           value: "-Xmx1g"
         - name: MTA_HOME
           value: /home/user/mta
-        # Do NOT replace PATH with a minimal list — that drops UDI's Java and breaks MTA Java provider.
-        - name: JAVA_HOME
-          value: /usr/lib/jvm/java-17-openjdk
-        - name: PATH
-          value: /home/user/mta:/usr/lib/jvm/java-17-openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 commands:
   - id: bootstrap-workspace
     exec:
@@ -70,6 +68,7 @@ commands:
         echo "3) Analysis profile: source=websphere, targets=quarkus,openjdk17"
         echo "4) Configure LLM via Command Palette: MTA: Open the Gen AI model provider configuration file"
         echo "5) Analyze apps under apps/*-was9-legacy or a demo/runs/<ts>/apps copy"
+        echo "6) Verify Java: java -version && echo JAVA_HOME=$JAVA_HOME"
       workingDir: ${PROJECT_SOURCE}
 events:
   postStart:
