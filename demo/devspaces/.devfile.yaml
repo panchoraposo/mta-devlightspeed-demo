@@ -24,8 +24,11 @@ components:
           value: "-Xmx1g"
         - name: MTA_HOME
           value: /home/user/mta
+        # Do NOT replace PATH with a minimal list — that drops UDI's Java and breaks MTA Java provider.
+        - name: JAVA_HOME
+          value: /usr/lib/jvm/java-17-openjdk
         - name: PATH
-          value: /home/user/mta:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          value: /home/user/mta:/usr/lib/jvm/java-17-openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 commands:
   - id: bootstrap-workspace
     exec:
