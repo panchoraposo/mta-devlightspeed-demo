@@ -20,7 +20,13 @@ components:
         - name: http-default
           targetPort: 8080
       env:
-        # UDI selects SDKMAN JDK 17 and wires JAVA_HOME + PATH (do not override PATH).
+        # Some UDI builds ship no JDK; bootstrap installs Temurin here.
+        - name: JDK_HOME
+          value: /home/user/jdk-17
+        - name: JAVA_HOME
+          value: /home/user/jdk-17
+        - name: PATH
+          value: /home/user/jdk-17/bin:/home/user/.local/bin:/home/user/mta:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         - name: USE_JAVA17
           value: "true"
         - name: MAVEN_OPTS
@@ -30,9 +36,15 @@ components:
 commands:
   - id: bootstrap-workspace
     exec:
-      label: Bootstrap MTA CLI + VS Code settings
+      label: Bootstrap MTA CLI + JDK + VS Code settings
       component: tools
       commandLine: bash demo/devspaces/scripts/bootstrap-workspace.sh
+      workingDir: ${PROJECT_SOURCE}
+  - id: install-jdk17
+    exec:
+      label: Install user-local Temurin JDK 17
+      component: tools
+      commandLine: bash demo/devspaces/scripts/install-jdk17.sh
       workingDir: ${PROJECT_SOURCE}
   - id: install-mta-cli
     exec:
@@ -63,12 +75,11 @@ commands:
       label: Print MTA / Lightspeed profile hint
       component: tools
       commandLine: |
-        echo "1) Run 'Install Linux MTA CLI' if analyzerPath is missing"
-        echo "2) Install MTA VS Code extension (recommended in .vscode/extensions.json)"
-        echo "3) Analysis profile: source=websphere, targets=quarkus,openjdk17"
-        echo "4) Configure LLM via Command Palette: MTA: Open the Gen AI model provider configuration file"
-        echo "5) Analyze apps under apps/*-was9-legacy or a demo/runs/<ts>/apps copy"
-        echo "6) Verify Java: java -version && echo JAVA_HOME=$JAVA_HOME"
+        echo "1) Run 'Install user-local Temurin JDK 17' if java -version fails"
+        echo "2) Run 'Install Linux MTA CLI' if analyzerPath is missing"
+        echo "3) Install MTA Core + MTA Java extensions, then Reload Window"
+        echo "4) Analysis profile: source=websphere, targets=quarkus,openjdk17"
+        echo "5) Configure LLM: MTA: Open the Gen AI model provider configuration file"
       workingDir: ${PROJECT_SOURCE}
 events:
   postStart:

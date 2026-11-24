@@ -18,11 +18,11 @@ Or create a workspace from the Dev Spaces UI and select this Devfile path.
 
 ## One-time setup inside the workspace
 
-1. **Java 17** — the Devfile sets `USE_JAVA17=true` so the UDI SDKMAN JDK is on `PATH` (required by the MTA Java analysis provider). Do **not** override `PATH`/`JAVA_HOME` to `/usr/lib/jvm/...` in this image. After start, confirm with `java -version`.
+1. **Java 17** — this UDI often has **no** `java` / SDKMAN. `postStart` runs `scripts/install-jdk17.sh` and installs Temurin into `/home/user/jdk-17`, with `JAVA_HOME`/`PATH` set in the Devfile. After the first start, run `java -version`, then **Reload Window** so the MTA Java provider picks it up. Air-gapped: set `JDK_URL` to an internal Temurin/OpenJDK 17 tarball mirror.
 2. **MTA CLI (Linux)** — `postStart` tries `scripts/install-mta-cli.sh` but **will not block** the IDE if GitHub/download is unreachable (common on locked-down clusters).
    - If `/home/user/mta/linux-mta-cli` is missing, run the Devfile command **Install Linux MTA CLI** (or the script in a terminal).
    - For air-gapped / no-GitHub clusters, set env `MTA_CLI_URL` to an internal mirror of the Red Hat MTA CLI tarball, then re-run install.
-3. **MTA / Lightspeed extension** — accept the recommendation in `.vscode/extensions.json` (`redhat.mta-vscode-extension`). Also install the MTA Java language extension so analysis providers register.
+3. **MTA / Lightspeed extension** — accept the recommendation in `.vscode/extensions.json` (`redhat.mta-vscode-extension`). Also install the **MTA Java** language extension (or **Install Extension Pack**) so analysis providers register.
 4. **LLM provider** — Command Palette → `MTA: Open the Gen AI model provider configuration file` and configure an OpenAI-compatible endpoint (OpenShift AI / MaaS), for example:
 
 ```yaml
