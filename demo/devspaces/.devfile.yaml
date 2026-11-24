@@ -20,15 +20,16 @@ components:
         - name: http-default
           targetPort: 8080
       env:
-        # Some UDI builds ship no JDK; bootstrap installs Temurin here.
-        - name: JDK_HOME
-          value: /home/user/jdk-17
+        # UDI RHEL9 has OpenJDK under /usr/lib/jvm but NOT /usr/bin/java.
+        # Put JAVA_HOME/bin first so Che-Code extensionHost (and MTA Java) can find java.
         - name: JAVA_HOME
-          value: /home/user/jdk-17
-        - name: PATH
-          value: /home/user/jdk-17/bin:/home/user/.local/bin:/home/user/mta:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          value: /usr/lib/jvm/java-17-openjdk
+        - name: JDK_HOME
+          value: /usr/lib/jvm/java-17-openjdk
         - name: USE_JAVA17
           value: "true"
+        - name: PATH
+          value: /usr/lib/jvm/java-17-openjdk/bin:/home/user/.local/bin:/home/user/mta:/home/user/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         - name: MAVEN_OPTS
           value: "-Xmx1g"
         - name: MTA_HOME
@@ -42,13 +43,13 @@ commands:
       workingDir: ${PROJECT_SOURCE}
   - id: install-jdk17
     exec:
-      label: Install user-local Temurin JDK 17
+      label: Install user-local Temurin JDK 17 (fallback)
       component: tools
       commandLine: bash demo/devspaces/scripts/install-jdk17.sh
       workingDir: ${PROJECT_SOURCE}
   - id: install-mta-cli
     exec:
-      label: Install Linux MTA CLI (into ~/mta)
+      label: Install Linux MTA/Kantra CLI (into ~/mta)
       component: tools
       commandLine: bash demo/devspaces/scripts/install-mta-cli.sh
       workingDir: ${PROJECT_SOURCE}
@@ -75,9 +76,9 @@ commands:
       label: Print MTA / Lightspeed profile hint
       component: tools
       commandLine: |
-        echo "1) Run 'Install user-local Temurin JDK 17' if java -version fails"
-        echo "2) Run 'Install Linux MTA CLI' if analyzerPath is missing"
-        echo "3) Install MTA Core + MTA Java extensions, then Reload Window"
+        echo "1) java -version must work (JAVA_HOME=/usr/lib/jvm/java-17-openjdk)"
+        echo "2) Install MTA Core + MTA Java extensions, then Reload Window"
+        echo "3) Run 'Install Linux MTA/Kantra CLI' if ~/mta/linux-mta-cli is missing (~700MB)"
         echo "4) Analysis profile: source=websphere, targets=quarkus,openjdk17"
         echo "5) Configure LLM: MTA: Open the Gen AI model provider configuration file"
       workingDir: ${PROJECT_SOURCE}

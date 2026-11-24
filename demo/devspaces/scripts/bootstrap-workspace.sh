@@ -25,19 +25,18 @@ if [[ -f "${SRC}/.vscode/settings.json" ]]; then
   cp -f "${SRC}/.vscode/settings.json" "${ROOT}/.vscode/settings.json" || true
 fi
 
-# This cluster's UDI has no usable java/SDKMAN — install a portable JDK into $HOME.
-bash "${SRC}/scripts/install-jdk17.sh" || true
-
 resolve_java_home() {
   local candidate
   for candidate in \
-    "${JDK_HOME}" \
     "${JAVA_HOME:-}" \
+    "${JDK_HOME:-}" \
     "${JAVA_HOME_17:-}" \
+    /usr/lib/jvm/java-17-openjdk \
+    /home/user/.java/current \
     /home/user/jdk-17 \
+    /home/tooling/.java/current \
     /home/tooling/.sdkman/candidates/java/current \
     /home/user/.sdkman/candidates/java/current \
-    /usr/lib/jvm/java-17-openjdk \
     /usr/lib/jvm/jre-17-openjdk
   do
     if [[ -n "${candidate}" && -x "${candidate}/bin/java" ]]; then
@@ -60,6 +59,11 @@ resolve_java_home() {
 }
 
 JAVA_RESOLVED="$(resolve_java_home || true)"
+# UDI often has OpenJDK RPMs but no /usr/bin/java — fall back to Temurin in $HOME.
+if [[ -z "${JAVA_RESOLVED}" ]]; then
+  bash "${SRC}/scripts/install-jdk17.sh" || true
+  JAVA_RESOLVED="$(resolve_java_home || true)"
+fi
 if [[ -n "${JAVA_RESOLVED}" ]]; then
   echo "Resolved JAVA_HOME=${JAVA_RESOLVED}"
   "${JAVA_RESOLVED}/bin/java" -version 2>&1 || true
@@ -74,7 +78,6 @@ export JAVA_HOME="${JAVA_RESOLVED}"
 export PATH="\${JAVA_HOME}/bin:/home/user/.local/bin:/home/user/mta:\${PATH}"
 EOF
   else
-    # Refresh JAVA_HOME line if bootstrap re-runs with a new install
     sed -i "s|^export JAVA_HOME=.*|export JAVA_HOME=\"${JAVA_RESOLVED}\"|" /home/user/.bashrc || true
   fi
   if [[ -f "${ROOT}/.vscode/settings.json" ]] && command -v python3 >/dev/null 2>&1; then
@@ -95,7 +98,7 @@ with open(path, "w") as f:
 PY
   fi
 else
-  echo "WARN: JDK still missing after install attempt. Run: bash demo/devspaces/scripts/install-jdk17.sh" >&2
+  echo "WARN: no JDK found. Run: bash demo/devspaces/scripts/install-jdk17.sh" >&2
 fi
 
 bash "${SRC}/scripts/install-mta-cli.sh" || true
